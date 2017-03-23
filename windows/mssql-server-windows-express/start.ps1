@@ -1,6 +1,7 @@
 # The script sets the sa password and start the SQL Service 
 # Also it attaches additional database from the disk
 # The format for attach_dbs
+# The format for restore_dbs
 
 param(
 [Parameter(Mandatory=$false)]
@@ -10,7 +11,10 @@ param(
 [string]$ACCEPT_EULA,
 
 [Parameter(Mandatory=$false)]
-[string]$attach_dbs
+[string]$attach_dbs,
+
+[Parameter(Mandatory=$false)]
+[string]$restore_dbs
 )
 
 
@@ -29,6 +33,22 @@ if($sa_password -ne "_"){
 	Write-Verbose "Changing SA login credentials"
     $sqlcmd = "ALTER LOGIN sa with password=" +"'" + $sa_password + "'" + ";ALTER LOGIN sa ENABLE;"
     Invoke-Sqlcmd -Query $sqlcmd -ServerInstance ".\SQLEXPRESS" 
+}
+
+$restore_dbs_cleaned = $restore_dbs.TrimStart('\\').TrimEnd('\\')
+
+$dbs = $restore_dbs_cleaned | ConvertFrom-Json
+
+if ($null -ne $dbs -And $dbs.Length -gt 0){
+	Write-Verbose "Restoring $($dbs.Length) database(s)"
+	Foreach($db in $dbs)
+	{	
+		$RelocateData = New-Object Microsoft.SqlServer.Management.Smo.RelocateFile("$($db.dbName)", "c:\sqlexpress\data\$($db.dbName).mdf")
+		$RelocateLog = New-Object Microsoft.SqlServer.Management.Smo.RelocateFile("$($db.dbName)_Log", "c:\sqlexpress\data\$($db.dbName)_Log.ldf")
+
+		Write-Verbose "Restore-SqlDatabase -ServerInstance '.\SQLEXPRESS' -Database $db.dbName -BackupFile $db.dbBackupFile -RelocateFile @($RelocateData,$RelocateLog)"
+		Restore-SqlDatabase -ServerInstance ".\SQLEXPRESS" -Database $db.dbName -BackupFile $db.dbBackupFile -RelocateFile @($RelocateData,$RelocateLog)
+	}
 }
 
 $attach_dbs_cleaned = $attach_dbs.TrimStart('\\').TrimEnd('\\')
@@ -56,6 +76,7 @@ if ($null -ne $dbs -And $dbs.Length -gt 0){
 Write-Verbose "Started SQL Server."
 
 $lastCheck = (Get-Date).AddSeconds(-2) 
+
 while ($true) { 
     Get-EventLog -LogName Application -Source "MSSQL*" -After $lastCheck | Select-Object TimeGenerated, EntryType, Message	 
     $lastCheck = Get-Date 
