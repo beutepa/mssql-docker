@@ -43,6 +43,7 @@ $dbs = $restore_dbs_cleaned | ConvertFrom-Json
 
 if ($null -ne $dbs -And $dbs.Length -gt 0){
     $svrConn = new-object Microsoft.SqlServer.Management.Common.ServerConnection
+	$svrConn.ServerInstance = ".\SQLEXPRESS"
     $svrConn.LoginSecure = $true
     $svr = new-object Microsoft.SqlServer.Management.Smo.Server ($svrConn)
     $res = new-object Microsoft.SqlServer.Management.Smo.Restore
@@ -50,6 +51,7 @@ if ($null -ne $dbs -And $dbs.Length -gt 0){
 	Write-Verbose "Restoring $($dbs.Length) database(s) to $($svr.Name)"
 	Foreach($db in $dbs)
 	{	
+		Write-Verbose "Restoring $($db)"
         $res.Devices.AddDevice($db.dbBackupFile, [Microsoft.SqlServer.Management.Smo.DeviceType]::File)
         $dt = $res.ReadFileList($svr)
         $RelocateFile = @()
@@ -57,10 +59,9 @@ if ($null -ne $dbs -And $dbs.Length -gt 0){
         {
             $logicalFileName = $r["LogicalName"]
             $physicalFileName = Split-Path $r["PhysicalName"] -leaf
+			Write-Verbose "RelocateFile with LogicalFileName:  $($logicalFileName), PhysicalName: $($physicalFileName)"
             $RelocateFile += New-Object Microsoft.SqlServer.Management.Smo.RelocateFile($logicalFileName, "c:\sqlexpress\data\$($physicalFileName)")
         }
-		#$RelocateData = New-Object Microsoft.SqlServer.Management.Smo.RelocateFile("InfoShare", "c:\sqlexpress\data\$($db.dbName).mdf")
-		#$RelocateLog = New-Object Microsoft.SqlServer.Management.Smo.RelocateFile("InfoShare_Log", "c:\sqlexpress\data\$($db.dbName)_Log.ldf")
 
 		Write-Verbose "Restore-SqlDatabase -ServerInstance '.\SQLEXPRESS' -Database $db.dbName -BackupFile $db.dbBackupFile -RelocateFile $RelocateFile"
 		Restore-SqlDatabase -ServerInstance ".\SQLEXPRESS" -Database $db.dbName -BackupFile $db.dbBackupFile -RelocateFile $RelocateFile
