@@ -29,7 +29,7 @@ You can run the container with the following command.
 (Note the you'll need Windows Server 2016 or Windows 10)
 
 ````
-docker run -d -p 1433:1433 -v C:/temp/:C:/temp/ -e sa_password=<YOUR SA PASSWORD> -e ACCEPT_EULA=Y -e restsore_dbs="<RESTORE-DB-JSON-CONFIG>" -e attach_dbs="<ATTACH-DB-JSON-CONFIG>" microsoft/mssql-server-windows-express
+docker run -d -p 1433:1433 -v C:/temp/:C:/temp/ -e sa_password=<YOUR SA PASSWORD> -e ACCEPT_EULA=Y -e restore_dbs="<RESTORE-DB-JSON-CONFIG>" -e attach_dbs="<ATTACH-DB-JSON-CONFIG>" microsoft/mssql-server-windows-express
 ````
 
 - **-p HostPort:containerPort** is for port-mapping a container network port to a host port.
@@ -110,7 +110,7 @@ ldf']}]" microsoft/mssql-server-windows-express
 
 This example shows all parameters in action for restoring a database:
 ```
-docker run -d -p 1433:1433 -v -v c:/sqlexpress:c:/sqlexpress -e sa_password=<YOUR SA PASSWORD> -e ACCEPT_EULA=Y -e restore_dbs="[{'dbName':'SampleDB','dbBackupFile':'C:\\temp\\sampledb.mdf'}]" microsoft/mssql-server-windows-express
+docker run -d -p 1433:1433 -v c:/sqlexpress:c:/sqlexpress -e sa_password=<YOUR SA PASSWORD> -e ACCEPT_EULA=Y -e restore_dbs="[{'dbName':'SampleDB','dbBackupFile':'C:\\sqlexpress\\backup\\sampledb.bak'}]" microsoft/mssql-server-windows-express
 ```
 
 <a name=sample-details></a>
