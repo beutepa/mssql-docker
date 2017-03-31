@@ -6,8 +6,8 @@ LABEL maintainer "Perry Skountrianos"
 ENV sql_express_download_url "https://go.microsoft.com/fwlink/?linkid=829176"
 
 ENV sa_password _
-ENV restore_dbs "[]"
 ENV attach_dbs "[]"
+ENV restore_dbs "[]"
 ENV ACCEPT_EULA _
 
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
@@ -28,4 +28,4 @@ RUN stop-service MSSQL`$SQLEXPRESS ; \
 
 HEALTHCHECK CMD [ "sqlcmd", "-Q", "select 1" ]
 
-CMD .\start -sa_password $env:sa_password -ACCEPT_EULA $env:ACCEPT_EULA -restore_dbs \"$env:restore_dbs\" -attach_dbs \"$env:attach_dbs\" -Verbose
+CMD .\start -sa_password $env:sa_password -ACCEPT_EULA $env:ACCEPT_EULA -attach_dbs \"$env:attach_dbs\" -restore_dbs \"$env:restore_dbs\" -Verbose
