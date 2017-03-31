@@ -45,9 +45,34 @@ docker run -d -p 1433:1433 -v C:/temp/:C:/temp/ -e sa_password=<YOUR SA PASSWORD
 
 ## Run this sample
 
-The image provides two environment variables to optionally set: </br>
+The image provides three environment variables to optionally set: </br>
 - **accepot_eula**: Confirms acceptance of the end user licensing agreement found [here](http://go.microsoft.com/fwlink/?LinkId=746388)
-- **sa_password**: Sets the sa password and enables the sa login
+- **sa_password**: Sets the sa password and enables the sa 
+- **restore_dbs**: The configuration for restoring custom DBs (.bak files).
+
+  This should be a JSON string, in the following format (note the use of SINGLE quotes!)
+  ```
+  [
+	{
+		'dbName': 'theDB',
+		'dbBackupFile': 'C:\\sqlexpress\\backup\\theDB.bak'
+	}
+  ]
+  ```
+
+  This is an array of databases, which can have zero to N databases.
+
+  Each consisting of:
+  - **dbName**: The name of the database
+  - **dbBackupFile**: An absolute path to the .bak file.
+
+	**Note:**
+	The path has double backslashes for escaping!
+	The path refers to files **within the container**. So make sure to include them in the image or mount them via **-v**!
+	For the moment the restore is 'hard-coded' to C:\sqlexpress\data, but the restore location will be added as a parameter to this json in the future. (TODO)
+	There will also be an option to force to replace the database, for the moment the script fails if the files to restore (the .mdf, .ldf files) already exist in the restore location. (TODO)
+
+
 - **attach_dbs**: The configuration for attaching custom DBs (.mdf, .ldf files).
 
   This should be a JSON string, in the following format (note the use of SINGLE quotes!)
@@ -77,7 +102,7 @@ The image provides two environment variables to optionally set: </br>
 	The path refers to files **within the container**. So make sure to include them in the image or mount them via **-v**!
 
 
-This example shows all parameters in action:
+This example shows all parameters in action for attaching a database:
 ```
 docker run -d -p 1433:1433 -v C:/temp/:C:/temp/ -e sa_password=<YOUR SA PASSWORD> -e ACCEPT_EULA=Y -e attach_dbs="[{'dbName':'SampleDB','dbFiles':['C:\\temp\\sampledb.mdf','C:\\temp\\sampledb_log.
 ldf']}]" microsoft/mssql-server-windows-express
