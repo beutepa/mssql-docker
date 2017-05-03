@@ -55,6 +55,8 @@ The image provides three environment variables to optionally set: </br>
   [
 	{
 		'dbName': 'theDB',
+		'dbDataPath': 'C:\\sqlexpress\\data',
+		'dbLogPath': 'C:\\sqlexpress\\data',
 		'dbBackupFile': 'C:\\sqlexpress\\backup\\theDB.bak'
 	}
   ]
@@ -64,13 +66,15 @@ The image provides three environment variables to optionally set: </br>
 
   Each consisting of:
   - **dbName**: The name of the database
+  - **dbDataPath**: The path where to restore the datafile(s) to
+  - **dbLogPath**: The path where to restore the logfile(s) to
   - **dbBackupFile**: An absolute path to the .bak file.
 
 	**Note:**
 	The path has double backslashes for escaping!
 	The path refers to files **within the container**. So make sure to include them in the image or mount them via **-v**!
-	For the moment the restore is 'hard-coded' to C:\sqlexpress\data, but the restore location will be added as a parameter to this json in the future. (TODO)
-	There will also be an option to force to replace the database, for the moment the script fails if the files to restore (the .mdf, .ldf files) already exist in the restore location. (TODO)
+	If the dbDataPath or dbLogPath are not provided, the default values as specified in the database settings will be used.
+	(TODO) There will also be an option to force to replace the database, for the moment the script fails if the files to restore (the .mdf, .ldf files) already exist in the restore location.
 
 
 - **attach_dbs**: The configuration for attaching custom DBs (.mdf, .ldf files).
