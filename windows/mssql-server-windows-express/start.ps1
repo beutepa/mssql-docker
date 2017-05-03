@@ -36,16 +36,18 @@ if($sa_password -ne "_"){
     Invoke-Sqlcmd -Query $sqlcmd -ServerInstance ".\SQLEXPRESS" 
 }
 
-#--env restore_dbs="[{'dbName': 'ISHDB-12.0.0','dbBackupFile': 'C:\\sqlexpress\\backup\\ISH-12.0.0-sqlserver2012.MobilePhones.bak'}]"
+#--env restore_dbs="[{'dbName': 'ISHDB-12.0.0','dbDataPath': 'c:\\sqlexpress\\data\\','dbLogPath': 'c:\\sqlexpress\\log\\','dbBackupFile': 'C:\\sqlexpress\\backup\\ISH-12.0.0-sqlserver2012.MobilePhones.bak'}]"
 $restore_dbs_cleaned = $restore_dbs.TrimStart('\\').TrimEnd('\\')
 
 $dbs = $restore_dbs_cleaned | ConvertFrom-Json
 
 if ($null -ne $dbs -And $dbs.Length -gt 0){
     $svrConn = new-object Microsoft.SqlServer.Management.Common.ServerConnection
-	$svrConn.ServerInstance = ".\SQLEXPRESS"
+    $svrConn.ServerInstance = ".\SQLEXPRESS"
     $svrConn.LoginSecure = $true
     $svr = new-object Microsoft.SqlServer.Management.Smo.Server ($svrConn)
+    $defaultDbDataPath = if ($svr.Settings.DefaultFile) { $svr.Settings.DefaultFile } else { $svr.MasterDBPath }
+    $defaultDbLogPath = if ($svr.Settings.DefaultLog) { $svr.Settings.DefaultLog } else { $svr.MasterDBLogPath }
     $res = new-object Microsoft.SqlServer.Management.Smo.Restore
 
 	Write-Verbose "Restoring $($dbs.Length) database(s) to $($svr.Name)"
@@ -55,12 +57,19 @@ if ($null -ne $dbs -And $dbs.Length -gt 0){
         $res.Devices.AddDevice($db.dbBackupFile, [Microsoft.SqlServer.Management.Smo.DeviceType]::File)
         $dt = $res.ReadFileList($svr)
         $RelocateFile = @()
+        $dbDataPath = if ($db.dbDataPath) { $db.dbDataPath } else { $defaultDbDataPath }
+        Write-Verbose "Using Data folder $($dbDataPath)"
+        $dbLogPath = if ($db.dbLogPath) { $db.dbLogPath } else { $defaultDbLogPath }
+        Write-Verbose "Using Log folder $($dbLogPath)"
+		
         foreach($r in $dt.Rows)
         {
             $logicalFileName = $r["LogicalName"]
+            $type = $r["Type"]
+            $physicalFilePath = if ($type -eq "D") { $dbDataPath.TrimEnd('\\') } else { $dbLogPath.TrimEnd('\\') }
             $physicalFileName = Split-Path $r["PhysicalName"] -leaf
-			Write-Verbose "RelocateFile with LogicalFileName:  $($logicalFileName), PhysicalName: $($physicalFileName)"
-            $RelocateFile += New-Object Microsoft.SqlServer.Management.Smo.RelocateFile($logicalFileName, "c:\sqlexpress\data\$($physicalFileName)")
+            Write-Verbose "RelocateFile with LogicalFileName:  $($logicalFileName), PhysicalName: $($physicalFileName)"
+            $RelocateFile += New-Object Microsoft.SqlServer.Management.Smo.RelocateFile($logicalFileName, "$($physicalFilePath)\$($physicalFileName)")
         }
 
 		Write-Verbose "Restore-SqlDatabase -ServerInstance '.\SQLEXPRESS' -Database $db.dbName -BackupFile $db.dbBackupFile -RelocateFile $RelocateFile"
