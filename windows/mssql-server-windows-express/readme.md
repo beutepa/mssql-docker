@@ -75,6 +75,7 @@ The image provides three environment variables to optionally set: </br>
 	The path refers to files **within the container**. So make sure to include them in the image or mount them via **-v**!
 	If the dbDataPath or dbLogPath are not provided, the default values as specified in the database settings will be used.
 	(TODO) There will also be an option to force to replace the database, for the moment the script fails if the files to restore (the .mdf, .ldf files) already exist in the restore location.
+	(TODO) Only backups containing type D (= Database) and/or L (= Log) are supported. Not yet supported I = Differential database, F = File or filegroup, G =Differential file, P = Partial, Q = Differential partial, NULL.
 
 
 - **attach_dbs**: The configuration for attaching custom DBs (.mdf, .ldf files).
