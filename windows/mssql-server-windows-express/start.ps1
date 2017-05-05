@@ -68,7 +68,7 @@ if ($null -ne $dbs -And $dbs.Length -gt 0){
         {
             $logicalFileName = $r["LogicalName"]
             $type = $r["Type"]
-            $physicalFilePath = if ($type -eq "D") { $dbDataPath.TrimEnd('\\') } else { $dbLogPath.TrimEnd('\\') }
+            $physicalFilePath = if ($type -eq "L") { $dbLogPath.TrimEnd('\\') } else { $dbDataPath.TrimEnd('\\') }
             $physicalFileName = Split-Path $r["PhysicalName"] -leaf
             Write-Verbose "RelocateFile with LogicalFileName:  $($logicalFileName), PhysicalName: $($physicalFilePath)\$($physicalFileName)"
             $RelocateFile += New-Object Microsoft.SqlServer.Management.Smo.RelocateFile($logicalFileName, "$($physicalFilePath)\$($physicalFileName)")
